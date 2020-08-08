@@ -70,8 +70,7 @@ Private Sub ShowDefaultClsInstanceSettingForm()
     Dim current_book As Workbook
     Dim active_book_name As String
 
-    Set current_book = Application.ActiveWorkbook
-    active_book_name = current_book.Name
+    active_book_name = Application.ActiveWorkbook.Name
 
     With FormDefaultClsInstanceSetting
         .IsUpdating = True
@@ -81,17 +80,27 @@ Private Sub ShowDefaultClsInstanceSettingForm()
     
             For Each current_book In Application.Workbooks
                 .AddItem current_book.Name
-    
+                
                 If active_book_name = current_book.Name Then
                     .ListIndex = .ListCount - 1
                     Form_Workbook_OnSelected active_book_name
                 End If
             Next current_book
         End With
-    
+
         .IsUpdating = False
-    
+
+        ' TODO: フォームのみを前面に出す（ブックを前面に出さない）ようにしたいがやり方がわからない
+        'Application.Windows(active_book_name).ActivateNext
+        Application.Windows(active_book_name).Activate
+        'Application.Windows(active_book_name).WindowState = xlMinimized
+        'Application.Visible = False
+
+        ' TODO: VBE のメニューの方から起動すると、起動した後 VBE にフォーカスが戻ってしまう回避方法がわからない
+        '.Show vbModeless
         .Show vbModal
+
+        Application.Visible = True
     End With
 End Sub
 

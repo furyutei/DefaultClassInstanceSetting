@@ -1,4 +1,7 @@
+#* text=auto
+
 *.cls diff=sjis
 *.bas diff=sjis
 *.vbs diff=sjis
+*.frm diff=sjis
 
