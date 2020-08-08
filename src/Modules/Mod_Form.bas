@@ -96,6 +96,8 @@ Sub Form_Workbook_OnSelected(WorkbookName As String)
 End Sub
 
 Sub Form_ClassModule_OnSelected(ClassModuleName As String)
+    FormDefaultClsInstanceSetting.IsUpdating = True
+
     ' 現在のデフォルトインスタンス状態を表示
     With FormDefaultClsInstanceSetting
         If DefaultClsInstance(ClassModuleName, Form_GetCurrentWorkbook, FormDefaultClsInstanceSetting.DebugMode) Then
@@ -106,6 +108,8 @@ Sub Form_ClassModule_OnSelected(ClassModuleName As String)
             .OptionButton_DefaultInstance_Disabled = True
         End If
     End With
+
+    FormDefaultClsInstanceSetting.IsUpdating = False
 End Sub
 
 Sub ShowDefaultClsInstanceSettingForm(Optional FromIDE As Boolean = False)
@@ -127,27 +131,29 @@ Sub ShowDefaultClsInstanceSettingForm(Optional FromIDE As Boolean = False)
                     .ListIndex = .ListCount - 1
                     Form_Workbook_OnSelected active_book_name
                 End If
+                
+                If FromIDE Then
+                    On Error Resume Next
+                    Application.Windows(current_book.Name).WindowState = xlMinimized
+                    On Error GoTo 0
+                End If
             Next current_book
         End With
 
         .IsUpdating = False
 
-        ' TODO: フォームのみを前面に出す（ブックを前面に出さない）ようにしたいがやり方がわからない
-        ' TODO: VBE のメニューの方から起動すると、起動した後 VBE にフォーカスが戻ってしまう回避方法がわからない
-        ' → FindWindow() / SetWindowPos 使用によりユーザーフォームを最前面に置くことで対応可能な模様
-        '   参考：[EXCEL VBAメモ - ユーザーフォームを常に最前面にする(Excel2016) - hakeの日記](https://hake.hatenablog.com/entry/20180318/p1)
-
-        'Application.Windows(active_book_name).ActivateNext
-        'Application.Windows(active_book_name).Activate
-        'Application.Windows(active_book_name).WindowState = xlMinimized
-        'Application.Visible = True
-        'AppActivate Application.Caption
-
         If FromIDE Then
-            'Application.Visible = False ' Modelessで起動する必要があるため、Trueに戻すタイミングがわからない
-            Application.Windows(active_book_name).WindowState = xlMinimized
+            'Application.Windows(active_book_name).ActivateNext
+            'Application.Windows(active_book_name).Activate
+            'AppActivate Application.Caption
+            ' TODO: フォームのみを前面に出す（ブックを前面に出さない）ようにしたいがやり方がわからない
+            ' TODO: VBE のメニューの方から起動すると、起動した後 VBE にフォーカスが戻ってしまう回避方法がわからない
+            ' → FindWindow() / SetWindowPos 使用によりユーザーフォームを最前面に置くことで対応可能な模様
+            '   参考：[EXCEL VBAメモ - ユーザーフォームを常に最前面にする(Excel2016) - hakeの日記](https://hake.hatenablog.com/entry/20180318/p1)
+    
+            'Application.Windows(active_book_name).WindowState = xlMinimized
+            Application.Visible = False
 
-            '.Show vbModal
             .Show vbModeless
             
             Dim ret As Long
@@ -162,6 +168,8 @@ Sub ShowDefaultClsInstanceSettingForm(Optional FromIDE As Boolean = False)
             If ret = 0 Then Debug.Print Err.LastDllError
 
             'Application.Visible = True
+            ' TODO: Modelessで起動する必要があるため、Trueに戻すタイミングがわからない
+            ' → QueryClose イベントにより処理
         Else
             .Show vbModal
         End If

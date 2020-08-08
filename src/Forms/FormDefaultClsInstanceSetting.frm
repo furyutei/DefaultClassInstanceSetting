@@ -58,3 +58,9 @@ Private Sub OptionButton_DefaultInstance_Enabled_Click()
     If IsUpdating Then Exit Sub
     DefaultClsInstance(Form_GetCurrentClassModuleName, Form_GetCurrentWorkbook, DebugMode) = True
 End Sub
+
+
+Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
+    Application.Visible = True
+    'Debug.Print "ƒtƒH[ƒ€‚ª•Â‚¶‚ç‚ê‚Ü‚·: " & CStr(CloseMode)
+End Sub
