@@ -36,31 +36,35 @@ End Property
 
 Private Sub ComboBox_Workbooks_Change()
     If IsUpdating Then Exit Sub
+    If DebugMode Then Debug.Print "ワークブック名が変わりました: " & Form_GetCurrentWorkbookName
     Form_Workbook_OnSelected Form_GetCurrentWorkbookName
 End Sub
 
 Private Sub ComboBox_ClassModules_Change()
     If IsUpdating Then Exit Sub
     Form_ClassModule_OnSelected Form_GetCurrentClassModuleName
+    If DebugMode Then Debug.Print "クラスモジュール名が変わりました: " & Form_GetCurrentClassModuleName
 End Sub
 
 Private Sub CommandButton_Cancel_Click()
+    If DebugMode Then Debug.Print "キャンセルボタンもしくはEscキーが押されました"
     Unload Me
     Application.Visible = True
 End Sub
 
-Private Sub OptionButton_DefaultInstance_Disabled_Click()
-    If IsUpdating Then Exit Sub
-    DefaultClsInstance(Form_GetCurrentClassModuleName, Form_GetCurrentWorkbook, DebugMode) = False
-End Sub
-
 Private Sub OptionButton_DefaultInstance_Enabled_Click()
     If IsUpdating Then Exit Sub
+    If DebugMode Then Debug.Print "Enabled が選択されました"
     DefaultClsInstance(Form_GetCurrentClassModuleName, Form_GetCurrentWorkbook, DebugMode) = True
 End Sub
 
+Private Sub OptionButton_DefaultInstance_Disabled_Click()
+    If IsUpdating Then Exit Sub
+    If DebugMode Then Debug.Print "Disabled が選択されました"
+    DefaultClsInstance(Form_GetCurrentClassModuleName, Form_GetCurrentWorkbook, DebugMode) = False
+End Sub
 
 Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
     Application.Visible = True
-    'Debug.Print "フォームが閉じられます: " & CStr(CloseMode)
+    If DebugMode Then Debug.Print "フォームが閉じられます: CloseMode=" & CStr(CloseMode)
 End Sub

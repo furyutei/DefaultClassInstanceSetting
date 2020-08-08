@@ -75,15 +75,18 @@ Public Property Get DefaultClsInstance(ClsModuleName As String, Optional TargetB
     Set ado_stream = CreateObject("ADODB.Stream")
     With ado_stream
         .Mode = ConnectModeEnum.adModeReadWrite
-        .Open
         .Type = StreamTypeEnum.adTypeText
 
         '参考: [ADODB.StreamのCharsetプロパティに設定できる値 - Jikoryuu’s BLOG](https://jikoryuu.hatenablog.com/entry/66676516)
         '.Charset = "shift-jis"
         .Charset = "x-ms-cp932"
 
+        .Open
+
         .LoadFromFile export_filepath
         code_buffer = .ReadText(StreamReadEnum.adReadAll)
+                
+        .Close
 
         If DebugMode Then Debug.Print "コード:" & vbCrLf & code_buffer
     
@@ -99,8 +102,6 @@ Public Property Get DefaultClsInstance(ClsModuleName As String, Optional TargetB
             Set matches = .Execute(code_buffer)
             If 0 < matches.Count Then DefaultClsInstance = True
         End With
-                
-        .Close
     End With
 
     If DebugMode Then
@@ -117,6 +118,7 @@ Public Property Let DefaultClsInstance(ClsModuleName As String, Optional TargetB
     Dim source_component As Object
 
     If TargetBook Is Nothing Then Set TargetBook = Application.ActiveWorkbook
+    If TargetBook.Name = ThisWorkbook.Name Then Exit Property
 
     Set vb_components = TargetBook.VBProject.VBComponents
     Set source_component = vb_components(ClsModuleName)
@@ -143,15 +145,18 @@ Public Property Let DefaultClsInstance(ClsModuleName As String, Optional TargetB
     Set ado_stream = CreateObject("ADODB.Stream")
     With ado_stream
         .Mode = ConnectModeEnum.adModeReadWrite
-        .Open
         .Type = StreamTypeEnum.adTypeText
 
         '参考: [ADODB.StreamのCharsetプロパティに設定できる値 - Jikoryuu’s BLOG](https://jikoryuu.hatenablog.com/entry/66676516)
         '.Charset = "shift-jis"
         .Charset = "x-ms-cp932"
 
+        .Open
+
         .LoadFromFile export_filepath
         code_buffer = .ReadText(StreamReadEnum.adReadAll)
+        
+        .Close
 
         If DebugMode Then Debug.Print "変更前:" & vbCrLf & code_buffer
     
@@ -165,11 +170,17 @@ Public Property Let DefaultClsInstance(ClsModuleName As String, Optional TargetB
             
             .Pattern = "^(\s*Attribute\s*VB_Name\s*=.*)$"
             code_buffer = .Replace(code_buffer, "$1" & "Attribute VB_PredeclaredId = " & IIf(IsValid, "True", "False"))
+
+            .MultiLine = False
+            .Pattern = "\s+$"
+            code_buffer = .Replace(code_buffer, vbCrLf)
         End With
     
         If DebugMode Then Debug.Print "変更後:" & vbCrLf & code_buffer
 
-        .Position = 0
+        .Open
+
+        '.Position = 0
         .WriteText code_buffer, StreamWriteEnum.adWriteChar
         .SaveToFile export_filepath, SaveOptionsEnum.adSaveCreateOverWrite
                 
