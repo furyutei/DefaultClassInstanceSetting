@@ -1,12 +1,54 @@
 Attribute VB_Name = "Mod_Form"
 Option Explicit
 
+'--------------------------------------------------------------------------------
+' 参考：[EXCEL VBAメモ - ユーザーフォームを常に最前面にする(Excel2016) - hakeの日記](https://hake.hatenablog.com/entry/20180318/p1)
+' SetWindowPos() / FindWindow() の定義
+Public Const SWP_NOMOVE = &H2
+Public Const SWP_NOSIZE = &H1
+
+Public Const HWND_TOP = 0
+Public Const HWND_BOTTOM = 1
+Public Const HWND_TOPMOST = -1
+Public Const HWND_NOTOPMOST = -2
+
+#If VBA7 Then
+    Public Declare PtrSafe Function SetWindowPos Lib "user32" _
+        (ByVal hWnd As LongPtr, _
+            ByVal hWndInsertAfter As LongPtr, _
+            ByVal x As LongPtr, _
+            ByVal y As LongPtr, _
+            ByVal cx As LongPtr, _
+            ByVal cy As LongPtr, _
+            ByVal uFlags As LongPtr) As Long
+    
+    Public Declare PtrSafe Function FindWindow Lib "user32" Alias "FindWindowA" _
+        (ByVal lpClassName As String, _
+            ByVal lpWindowName As String) As Long
+#Else
+    Public Declare Function SetWindowPos Lib "user32" _
+        (ByVal hWnd As Long, _
+            ByVal hWndInsertAfter As Long, _
+            ByVal x As Long, _
+            ByVal y As Long, _
+            ByVal cx As Long, _
+            ByVal cy As Long, _
+            ByVal wFlags As Long) As Long
+
+    Public Declare Function FindWindow Lib "user32" Alias "FindWindowA" _
+        (ByVal lpClassName As String, _
+            ByVal lpWindowName As String) As Long
+#End If
+'--------------------------------------------------------------------------------
+
 Private Enum VBComponentType
     Module = 1
     ClassModule = 2
     Form = 3
     Document = 100
 End Enum
+
+Const C_VBA6_USERFORM_CLASSNAME = "ThunderDFrame"
 
 Function Form_GetCurrentWorkbookName() As String
     With FormDefaultClsInstanceSetting.ComboBox_Workbooks
@@ -66,7 +108,7 @@ Sub Form_ClassModule_OnSelected(ClassModuleName As String)
     End With
 End Sub
 
-Private Sub ShowDefaultClsInstanceSettingForm()
+Sub ShowDefaultClsInstanceSettingForm(Optional FromIDE As Boolean = False)
     Dim current_book As Workbook
     Dim active_book_name As String
 
@@ -91,16 +133,38 @@ Private Sub ShowDefaultClsInstanceSettingForm()
         .IsUpdating = False
 
         ' TODO: フォームのみを前面に出す（ブックを前面に出さない）ようにしたいがやり方がわからない
-        'Application.Windows(active_book_name).ActivateNext
-        Application.Windows(active_book_name).Activate
-        'Application.Windows(active_book_name).WindowState = xlMinimized
-        'Application.Visible = False
-
         ' TODO: VBE のメニューの方から起動すると、起動した後 VBE にフォーカスが戻ってしまう回避方法がわからない
-        '.Show vbModeless
-        .Show vbModal
+        ' → FindWindow() / SetWindowPos 使用によりユーザーフォームを最前面に置くことで対応可能な模様
+        '   参考：[EXCEL VBAメモ - ユーザーフォームを常に最前面にする(Excel2016) - hakeの日記](https://hake.hatenablog.com/entry/20180318/p1)
 
-        Application.Visible = True
+        'Application.Windows(active_book_name).ActivateNext
+        'Application.Windows(active_book_name).Activate
+        'Application.Windows(active_book_name).WindowState = xlMinimized
+        'Application.Visible = True
+        'AppActivate Application.Caption
+
+        If FromIDE Then
+            'Application.Visible = False ' Modelessで起動する必要があるため、Trueに戻すタイミングがわからない
+            Application.Windows(active_book_name).WindowState = xlMinimized
+
+            '.Show vbModal
+            .Show vbModeless
+            
+            Dim ret As Long
+            Dim formHWnd As Long
+        
+            'Get window handle of the userform
+            formHWnd = FindWindow(C_VBA6_USERFORM_CLASSNAME, FormDefaultClsInstanceSetting.Caption)
+            If formHWnd = 0 Then Debug.Print Err.LastDllError
+        
+            'Set userform window to 'always on top'
+            ret = SetWindowPos(formHWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE)
+            If ret = 0 Then Debug.Print Err.LastDllError
+
+            'Application.Visible = True
+        Else
+            .Show vbModal
+        End If
     End With
 End Sub
 

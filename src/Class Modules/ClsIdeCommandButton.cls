@@ -37,5 +37,5 @@ Public Function Init(cb As CommandBar, Optional strCaption As String, Optional s
 End Function
 
 Private Sub IdeCommandButtonEvent_Click(ByVal ctrl As Object, handled As Boolean, CancelDefault As Boolean)
-    Application.Run ctrl.OnAction
+    Application.Run ctrl.OnAction, True
 End Sub

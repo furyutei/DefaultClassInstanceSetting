@@ -12,7 +12,8 @@ Option Explicit
 ' 参考: [Excel アドインを VBA で作成する?|?knooto](https://knooto.info/excel-vba-addin/)
 Private Const ADDIN_MENU_NAME = "Default Class Instance Setting"
 Private Const IDE_MENU_NAME = "Pre-Instance(&P)" ' TODO: (&P)(VB_PredeclaredIdの"P")→キー被りした場合どうするか？
-Private Const CALL_PROC = "Mod_Form.Main"
+'Private Const CALL_PROC = "Mod_Form.Main"
+Private Const CALL_PROC = "Mod_Form.ShowDefaultClsInstanceSettingForm"
 
 Private Sub Workbook_Open()
     AddMenus
